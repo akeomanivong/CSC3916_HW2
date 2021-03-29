@@ -72,6 +72,37 @@ router.post('/signin', function (req, res) {
     }
 });
 
+router.get("/movies", function (req, res)  {
+    var {headers, query} = req;
+    res.json({status: 200, message: "GET movies", headers, query, env: process.env.UNIQUE_KEY});
+});
+
+router.post("/movies", function (req, res)  {
+    var {headers, query} = req;
+    res.json({status: 200, message: "Movie saved", headers, query, env: process.env.UNIQUE_KEY});
+});
+
+router.put("/movies", authJwtController.isAuthenticated, function (req, res)  {
+    var {headers, query} = req;
+    res.json({status: 200, message: "Movie updated", headers, query, env: process.env.UNIQUE_KEY});
+});
+
+router.delete("/movies", function (req, res)  {
+    var user = db.findOne(req.body.username);
+    if (!user) {
+        res.status(401).send({success: false, msg: 'Authentication failed. User not found.'});
+    } else {
+        if (req.body.password == user.password) {
+            var {headers, query} = req;
+            res.send({status: 200, message: "movie deleted", headers, query, env: process.env.UNIQUE_KEY});
+        }
+        else {
+            res.status(401).send({success: false, msg: 'Authentication failed.'});
+        }
+    }
+});
+
+
 router.route('/testcollection')
     .delete(authController.isAuthenticated, function(req, res) {
         console.log(req.body);
@@ -93,6 +124,10 @@ router.route('/testcollection')
         res.json(o);
     }
     );
+
+router.all('*', function(req, res){
+    res.status(401).send({success: false, msg: 'HTTP method not supported.'});
+});
 
 app.use('/', router);
 app.listen(process.env.PORT || 8080);
